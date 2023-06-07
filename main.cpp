@@ -40,7 +40,7 @@ int main(){
 				for(int k = 0; k < PRECISION; k++){
 					p = get_mandelbrot_points(p, norm_x, norm_y);
 					std::cout << p.first << " " << p.second << std::endl; //Debugging if precision was changed
-					if(p.first > 1e7 || std::isnan(p.first) || p.second > 1e7 || std::isnan(p.second)){
+					if(abs(p.first) > 1e4 || std::isnan(p.first) || abs(p.second) > 1e4 || std::isnan(p.second)){
 						DrawPixel(i, j, Color{255 - k, 255 - 2*k, 255 - 3*k, 255});
 						break;
 					}
