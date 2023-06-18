@@ -8,7 +8,7 @@
 ## Modifying the drawing.
 Before you can begin to make changes, you must have Raylib intalled on your machine.<br>
 
-Follow the installation guides here:
+Follow the installation guides here:<br>
 Windows - https://github.com/raysan5/raylib/wiki/Working-on-Windows<br>
 Linux - https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux<br>
 Mac OS - https://github.com/raysan5/raylib/wiki/Working-on-macOS<br>
