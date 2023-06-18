@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <unistd.h>
-#include "raylib.h"
+#include "include/raylib.h"
 #include "mandelbrot.h"
 
 /*
@@ -10,11 +10,7 @@
  * not show on the edges.
  */
 
-int WIDTH 	= 800;
-int HEIGHT 	= 600;
-int PRECISION 	= 150;
-int FPS 	= 60;
-bool CONTINUE	= true;
+const bool CONTINUE		= true;
 
 /*
  * Mandelbrot:
@@ -25,30 +21,54 @@ bool CONTINUE	= true;
  */
 
 int main(){
-	InitWindow(WIDTH, HEIGHT, "raylib [core]");
+
+	// Initialization
+	//-----------------------------------------------------------------
+	const int WIDTH = 800;
+	const int HEIGHT = 600;
+	const int FPS = 60;
+	const int PRECISION = 150;
+	
+	InitWindow(WIDTH, HEIGHT, "raylib [core] - Mandelbrot Set");
+	
+	enum { STATE_LOADING, STATE_FINISHED } state = STATE_LOADING;
+
 	SetTargetFPS(FPS);
+	//-----------------------------------------------------------------
+	
+	// Main game loop
 	while(!WindowShouldClose()){
+		// Draw
+		//-----------------------------------------------------------------
 		BeginDrawing();
-		ClearBackground(BLACK);
+		// ClearBackground(BLACK);
 		// DrawText("Image Loading...", WIDTH/2, HEIGHT/2, 20, WHITE);
-		if(!CONTINUE) continue;
-		for(float i = 0.; i <= WIDTH; i+=1){
-			for(float j = 0.; j <= HEIGHT; j+=1){
-				std::pair<float, float> p(0, 0);
-				float norm_x = 3*(i/800)-2;
-				float norm_y = 2*(j/600)-1;
-				for(int k = 0; k < PRECISION; k++){
-					p = get_mandelbrot_points(p, norm_x, norm_y);
-					std::cout << p.first << " " << p.second << std::endl; //Debugging if precision was changed
-					if(abs(p.first) > 1e4 || std::isnan(p.first) || abs(p.second) > 1e4 || std::isnan(p.second)){
-						DrawPixel(i, j, Color{255 - k, 255 - 2*k, 255 - 3*k, 255});
-						break;
+		
+		switch(state){
+			case STATE_LOADING:
+				ClearBackground(BLACK);
+				for(float i = 0.; i <= WIDTH; i+=1){
+					for(float j = 0.; j <= HEIGHT; j+=1){
+						std::pair<float, float> p(0, 0);
+						float norm_x = 3*(i/800)-2;
+						float norm_y = 2*(j/600)-1;
+						for(int k = 0; k < PRECISION; k++){
+							p = get_mandelbrot_points(p, norm_x, norm_y);
+							std::cout << p.first << " " << p.second << std::endl; //Debugging if precision was changed
+							if(abs(p.first) > 1e4 || std::isnan(p.first) || abs(p.second) > 1e4 || std::isnan(p.second)){
+								DrawPixel(i, j, Color{255 - k, 255 - 2*k, 255 - 3*k, 255});
+								break;
+							}
+						}
 					}
 				}
-			}
+				state = STATE_FINISHED;
+				break;
+			case STATE_FINISHED:
+				break;
 		}
-		CONTINUE = false;
 		EndDrawing();
+		//-----------------------------------------------------------------
 	}
 	CloseWindow();
 	return 0;
