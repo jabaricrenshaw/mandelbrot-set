@@ -1,6 +1,9 @@
+#include <cstdint>
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include <unistd.h>
+#include <stdint.h>
 #include "include/raylib.h"
 #include "mandelbrot.h"
 
@@ -9,8 +12,6 @@
  * it complies to a 4:3 resolution or the entire mandelbrot will
  * not show on the edges.
  */
-
-const bool CONTINUE		= true;
 
 /*
  * Mandelbrot:
@@ -27,12 +28,16 @@ int main(){
 	const int WIDTH = 800;
 	const int HEIGHT = 600;
 	const int FPS = 60;
-	const int PRECISION = 150;
-	
-	InitWindow(WIDTH, HEIGHT, "raylib [core] - Mandelbrot Set");
+	const int PRECISION = 500;
+
+	srand(time(NULL));
+	std::pair<uint16_t, bool> fc[3];
+	std::pair<uint16_t, bool> tc[3];
+	for(auto i = 0; i < sizeof(fc)/sizeof(fc[0]); i++) fc[i] = std::pair<uint16_t, bool>(rand(), rand() % 2);	
 	
 	enum { STATE_LOADING, STATE_FINISHED } state = STATE_LOADING;
-
+	
+	InitWindow(WIDTH, HEIGHT, "raylib [core] - Mandelbrot Set");
 	SetTargetFPS(FPS);
 	//-----------------------------------------------------------------
 	
@@ -40,32 +45,57 @@ int main(){
 	while(!WindowShouldClose()){
 		// Draw
 		//-----------------------------------------------------------------
-		BeginDrawing();
-		// ClearBackground(BLACK);
-		// DrawText("Image Loading...", WIDTH/2, HEIGHT/2, 20, WHITE);
-		
+		BeginDrawing();	
 		switch(state){
+
+			// Start Case -----------------------------------------------------
 			case STATE_LOADING:
 				ClearBackground(BLACK);
-				for(float i = 0.; i <= WIDTH; i+=1){
-					for(float j = 0.; j <= HEIGHT; j+=1){
-						std::pair<float, float> p(0, 0);
-						float norm_x = 3*(i/800)-2;
-						float norm_y = 2*(j/600)-1;
+				for(auto i = 0; i <= WIDTH; i++){
+					for(auto j = 0; j <= HEIGHT; j++){
+						std::pair<float, float> norm_points(0., 0.);
+						float norm_x = 3*(static_cast<float>(i)/800)-2;
+						float norm_y = 2*(static_cast<float>(j)/600)-1;
 						for(int k = 0; k < PRECISION; k++){
-							p = get_mandelbrot_points(p, norm_x, norm_y);
-							std::cout << p.first << " " << p.second << std::endl; //Debugging if precision was changed
-							if(abs(p.first) > 1e4 || std::isnan(p.first) || abs(p.second) > 1e4 || std::isnan(p.second)){
-								DrawPixel(i, j, Color{255 - k, 255 - 2*k, 255 - 3*k, 255});
+							norm_points = get_mandelbrot_points(norm_points, norm_x, norm_y);
+							if(std::isnan(norm_points.first) || std::isnan(norm_points.second)){
+								DrawPixel(i, j, Color{
+									static_cast<unsigned char>( (k*fc[0].first) % 255 * fc[0].second ),	//Red
+									static_cast<unsigned char>( (k*fc[1].first) % 255 * fc[1].second ),	//Green
+									static_cast<unsigned char>( (k*fc[2].first) % 255 * fc[2].second ),	//Blue
+									255		//Alpha
+								});
+
+								for(auto v = 0; v < sizeof(fc)/sizeof(fc[0]); v++) tc[v] = std::pair<uint16_t, bool>(fc[v].first, fc[v].second);
+
+								// Some other nice color presets
+								//DrawPixel(i, j, Color{255, (k % 255), (2*k % 255), (3*k % 255)});	
+								//DrawPixel(i, j, Color{(k % 255), (2*k % 255), (3*k % 255), 255});
+								//DrawPixel(i, j, Color{(k % 255), (2*k % 255), (3*k % 255), (4*k % 255)});
+								
 								break;
 							}
 						}
 					}
 				}
 				state = STATE_FINISHED;
-				break;
+				break;	
+			// End Case -------------------------------------------------------
+			
+
+			// Start Case -----------------------------------------------------
 			case STATE_FINISHED:
+				if(IsKeyDown(KEY_R)){
+					std::cout << "Key Down for new color!" << std::endl;
+					for(auto i = 0; i < sizeof(fc)/sizeof(fc[0]); i++) fc[i] = std::pair<uint16_t, bool>(rand(), rand() % 2);
+					
+					std::cout << "New Colors (RGBA and On/Off):" << std::endl;
+					for(auto i = 0; i < sizeof(tc)/sizeof(tc[0]); i++) std::cout << tc[i].first << " : " << tc[i].second << std::endl;
+					
+					state = STATE_LOADING;
+				}
 				break;
+			// End Case -------------------------------------------------------
 		}
 		EndDrawing();
 		//-----------------------------------------------------------------
@@ -75,12 +105,21 @@ int main(){
 }
 
 
+
+
+
+
+
+
+
+
 /*
-   DrawLine(400, 0, 400, 800, WHITE);
-   DrawLine(0, 400, 800, 400, WHITE);
+DrawLine(400, 0, 400, 800, WHITE);
+DrawLine(0, 400, 800, 400, WHITE);
 
 
-   for(float i = -400.0; i <= 400.0; i+=0.1){
+for(float i = -400.0; i <= 400.0; i+=0.1){
+
 // y = x^2
 DrawCircle(i + 400, std::pow(i, 2) + 400, 2, RED);
 
@@ -94,47 +133,3 @@ DrawCircle(i + 400, 1/i + 400, 2, BLUE);
 DrawCircle(i + 400, std::exp(i) + 400, 2, BROWN);
 }
 */
-
-/*
-	 * FIGURE OUT HOW TO PRERENDER BEFORE WINDOW OPENS
-	 * LOAD PIXEL VALUES INTO VECTOR
-	 * ... wA = pixel vector
-	float norm_x = 0;
-	float norm_y = 0;
-	int precision = 100;
-	std::pair<float, float> mand_p(0, 0);
-	std::vector<std::vector<Color>> wA;
-	for(float i = 0; i <= WIDTH; i+=1){
-		for(float j = 0; j <= HEIGHT; j+=1){
-			wA.push_back(std::vector<Color>{BLACK});
-			mand_p.first = 0;
-			mand_p.second = 0;
-			norm_x = 3 * (i/WIDTH) - 2;
-			norm_y = 2 * (j/HEIGHT) - 1;
-			for(int k = 0; k < precision; k++){
-				mand_p = mandel(mand_p, norm_x, norm_y);
-				if(mand_p.first > 10000 || std::isnan(mand_p.first) || mand_p.second > 10000 || std::isnan(mand_p.second)){
-					wA[i][j] = WHITE;
-					break;
-				}
-			}
-		}
-	}
-
-	
-	InitWindow(WIDTH, HEIGHT, "raylib [core]");
-	SetTargetFPS(60);
-	while(!WindowShouldClose()){
-		BeginDrawing();
-		
-		FETCH AND DRAW VALUES FROM PIXEL VECTOR
-		for(float i = 0; i <= WIDTH; i++){
-			for(float j = 0; j <= HEIGHT; j++){
-				DrawPixelV(Vector2{i, j}, wA[i][j]);
-			}
-		}
-
-		EndDrawing();
-	}
-	*/
-
