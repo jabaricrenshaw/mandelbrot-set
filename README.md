@@ -5,7 +5,7 @@
 1. Start the executable program<br>
 ```./mandelbrot```
 
-## Modifying the drawing.
+## Modifying the drawing. (Or building for your unsupported platform)
 Before you can begin to make changes, you must have Raylib intalled on your machine.<br>
 
 Follow the installation guides here:<br>
