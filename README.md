@@ -1,7 +1,7 @@
 # mandelbrot-set
 
 ## Viewing the Drawing.
-*Currently, Linux is the only platform supported. More will be added soon.
+*Currently, Linux is the only platform supported for the downloadable binary. (You can build your own if you have installed Raylib) More will be added soon.
 1. Start the executable program<br>
 ```./mandelbrot```
 
