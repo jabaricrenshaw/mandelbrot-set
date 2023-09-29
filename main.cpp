@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <stdint.h>
 
-#include "include/raylib.h"
+#include "raylib.h"
 #include "mandelbrot.h"
 
 #define WIDTH		800
