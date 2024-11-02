@@ -1,9 +1,6 @@
-#include <cstdint>
 #include <iostream>
 #include <cmath>
-#include <vector>
-#include <unistd.h>
-#include <stdint.h>
+
 #include "include/raylib.h"
 #include "mandelbrot.h"
 
@@ -21,21 +18,29 @@
  * Values normalized on x: [-1, 1], y: [-2, 1] for viewing on all Real coordinates
  */
 
+void gen_colors(Color *color){
+    color->r = static_cast<unsigned char>(rand()%255);
+    color->g = static_cast<unsigned char>(rand()%255);
+    color->b = static_cast<unsigned char>(rand()%255);
+    color->a = 255;
+}
+
 int main(){
 
 	// Initialization
 	//-----------------------------------------------------------------
-	const int WIDTH = 1440;
+	const int WIDTH = 1080;
 	const int HEIGHT = 1080;
 	const int FPS = 60;
 	const int PRECISION = 500;
+   
+	enum { STATE_LOADING, STATE_FINISHED } state = STATE_LOADING;
+    std::pair<float, float> norm_points;
+    float norm_x, norm_y;
+    Color d_color;
+    gen_colors(&d_color);
 
 	srand(time(NULL));
-	std::pair<uint16_t, bool> fc[3];
-	std::pair<uint16_t, bool> tc[3];
-	for(auto i = 0; i < sizeof(fc)/sizeof(fc[0]); i++) fc[i] = std::pair<uint16_t, bool>(rand(), rand() % 2);	
-	
-	enum { STATE_LOADING, STATE_FINISHED } state = STATE_LOADING;
 	
 	InitWindow(WIDTH, HEIGHT, "raylib [core] - Mandelbrot Set");
 	SetTargetFPS(FPS);
@@ -51,23 +56,21 @@ int main(){
 			// Start Case -----------------------------------------------------
 			case STATE_LOADING:
 				ClearBackground(BLACK);
-				for(auto i = 0; i <= WIDTH; i++){
-					for(auto j = 0; j <= HEIGHT; j++){
-						std::pair<float, float> norm_points(0., 0.);
-						float norm_x = 3*(static_cast<float>(i)/static_cast<float>(WIDTH))-2;
-						float norm_y = 2*(static_cast<float>(j)/static_cast<float>(HEIGHT))-1;
-						for(int k = 0; k < PRECISION; k++){
+				for(auto i = 0; i <= WIDTH; ++i){
+					for(auto j = 0; j <= HEIGHT; ++j){
+                        norm_points = std::pair<float, float>(0, 0);
+						norm_x = 3*(static_cast<float>(i)/static_cast<float>(WIDTH))-2;
+						norm_y = 2*(static_cast<float>(j)/static_cast<float>(HEIGHT))-1;
+						for(int k = 0; k < PRECISION; ++k){
 							norm_points = get_mandelbrot_points(norm_points, norm_x, norm_y);
 							if(std::isnan(norm_points.first) || std::isnan(norm_points.second)){
-								DrawPixel(i, j, Color{
-									static_cast<unsigned char>( (k*fc[0].first) % 255 * fc[0].second ),	//Red
-									static_cast<unsigned char>( (k*fc[1].first) % 255 * fc[1].second ),	//Green
-									static_cast<unsigned char>( (k*fc[2].first) % 255 * fc[2].second ),	//Blue
-									255		//Alpha
-								});
-
-								for(auto v = 0; v < sizeof(fc)/sizeof(fc[0]); v++) tc[v] = std::pair<uint16_t, bool>(fc[v].first, fc[v].second);
-
+                                DrawPixel(i, j, Color{
+                                    static_cast<unsigned char>( (k*d_color.r) * (d_color.r%5)),
+                                    static_cast<unsigned char>( (k*d_color.g) * (d_color.g%5)),
+                                    static_cast<unsigned char>( (k*d_color.b) * (d_color.b%5)),
+                                    255
+                                });
+                                
 								// Some other nice color presets
 								//DrawPixel(i, j, Color{255, (k % 255), (2*k % 255), (3*k % 255)});	
 								//DrawPixel(i, j, Color{(k % 255), (2*k % 255), (3*k % 255), 255});
@@ -78,6 +81,16 @@ int main(){
 						}
 					}
 				}
+                
+                std::cout << "Colors drawn (R/G/B/A): \n" << 
+                    (int)d_color.r << "/" << 
+                    (int)d_color.g << "/" << 
+                    (int)d_color.b << "/" << 
+                    (int)d_color.a << "\n\n" <<
+                    "Press Key(R) for new color!\n" <<
+                    "Press Key (Q) to quit.\n"
+                    << std::endl;
+
 				state = STATE_FINISHED;
 				break;	
 			// End Case -------------------------------------------------------
@@ -86,13 +99,8 @@ int main(){
 			// Start Case -----------------------------------------------------
 			case STATE_FINISHED:
 				if(IsKeyDown(KEY_R)){
-					std::cout << "Key Down for new color!" << std::endl;
-					for(auto i = 0; i < sizeof(fc)/sizeof(fc[0]); i++) fc[i] = std::pair<uint16_t, bool>(rand(), rand() % 2);
-					
-					std::cout << "New Colors (RGBA and On/Off):" << std::endl;
-					for(auto i = 0; i < sizeof(tc)/sizeof(tc[0]); i++) std::cout << tc[i].first << " : " << tc[i].second << std::endl;
-					
-					state = STATE_LOADING;
+                    gen_colors(&d_color);
+                    state = STATE_LOADING;
 				}
 				break;
 			// End Case -------------------------------------------------------
